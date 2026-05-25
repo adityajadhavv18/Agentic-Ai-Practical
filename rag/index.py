@@ -1,0 +1,41 @@
+from dotenv import load_dotenv
+from pathlib import Path
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_qdrant import QdrantVectorStore
+
+
+load_dotenv()
+
+pdf_path = Path(__file__).parent / "nodejs.pdf"
+
+#load the pdf file into python program using langchain document loader
+loader = PyPDFLoader(file_path=pdf_path)
+docs = loader.load()
+
+
+#splitting the document using lanchain text splitter
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=400
+)
+
+chunks = text_splitter.split_documents(documents=docs)
+
+
+#Vector Embeddings 
+
+vector_embeddings = OpenAIEmbeddings(
+    model="text-embedding-3-large", 
+                                     )
+
+vector_store = QdrantVectorStore.from_documents(
+    documents=chunks,
+    embedding=vector_embeddings,
+    url="http://localhost:6333",
+    collection_name="learning_rag"
+    
+)
+
+print("Indexing of document done .....")
